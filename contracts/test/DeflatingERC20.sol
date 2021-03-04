@@ -2,25 +2,24 @@
 
 pragma solidity ^0.7.4;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+import '@passive-income/dpex-swap-core/contracts/interfaces/IBEP20.sol';
 import '../libraries/SafeMath.sol';
 
-contract DeflatingERC20 {
+contract DeflatingERC20 is IBEP20, Ownable {
     using SafeMath for uint;
 
-    string public constant name = 'Deflating Test Token';
-    string public constant symbol = 'DTT';
-    uint8 public constant decimals = 18;
-    uint  public totalSupply;
-    mapping(address => uint) public balanceOf;
-    mapping(address => mapping(address => uint)) public allowance;
+    string public override constant name = 'Deflating Test Token';
+    string public override constant symbol = 'DTT';
+    uint8 public override constant decimals = 18;
+    uint  public override totalSupply;
+    mapping(address => uint) override public balanceOf;
+    mapping(address => mapping(address => uint)) public override allowance;
 
     bytes32 public DOMAIN_SEPARATOR;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint) public nonces;
-
-    event Approval(address indexed owner, address indexed spender, uint value);
-    event Transfer(address indexed from, address indexed to, uint value);
 
     constructor(uint _totalSupply) {
         uint chainId;
@@ -37,6 +36,10 @@ contract DeflatingERC20 {
             )
         );
         _mint(msg.sender, _totalSupply);
+    }
+
+    function getOwner() external override view returns (address) {
+        return owner();
     }
 
     function _mint(address to, uint value) internal {
@@ -65,17 +68,17 @@ contract DeflatingERC20 {
         emit Transfer(from, to, transferAmount);
     }
 
-    function approve(address spender, uint value) external returns (bool) {
+    function approve(address spender, uint value) external override returns (bool) {
         _approve(msg.sender, spender, value);
         return true;
     }
 
-    function transfer(address to, uint value) external returns (bool) {
+    function transfer(address to, uint value) external override returns (bool) {
         _transfer(msg.sender, to, value);
         return true;
     }
 
-    function transferFrom(address from, address to, uint value) external returns (bool) {
+    function transferFrom(address from, address to, uint value) external override returns (bool) {
         if (allowance[from][msg.sender] != uint(-1)) {
             allowance[from][msg.sender] = allowance[from][msg.sender].sub(value);
         }

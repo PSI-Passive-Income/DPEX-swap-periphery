@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/types";
 
+// import "@nomiclabs/hardhat-ganache";
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-typechain";
 import 'hardhat-abi-exporter';
@@ -12,11 +13,12 @@ const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
-      forking: {
-        enabled: true,
-        url: `${process.env.MAIN_ALCHEMY_URL}`,
-        blockNumber: 11754056
-      }
+      hardfork: "istanbul"
+      // forking: {
+      //   enabled: true,
+      //   url: `${process.env.MAIN_ALCHEMY_URL}`,
+      //   blockNumber: 11754056
+      // }
     },
     kovan: {
       url: `${process.env.KOVAN_INFURA}`,
@@ -53,8 +55,9 @@ const config: HardhatUserConfig = {
   },
   solidity: {
     compilers: [{ 
-      version: "0.7.4", 
+      version: "0.7.4",
       settings: {
+        evmVersion: "istanbul",
         optimizer: {
           enabled: true,
           runs: 999999

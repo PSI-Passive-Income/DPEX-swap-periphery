@@ -23,7 +23,7 @@ library DPexLibrary {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'd0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66' // init code hash
+                hex'58ab19d16ed96a4f9c6e7df41fb611e0c2ea7dc0bd750a5f6471c054df32ce72' // init code hash
             ))));
     }
 

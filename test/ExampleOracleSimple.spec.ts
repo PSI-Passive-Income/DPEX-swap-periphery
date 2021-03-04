@@ -1,12 +1,12 @@
 import chai, { expect } from 'chai'
-import { Contract } from 'ethers'
-import { BigNumber } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-import ExampleOracleSimple from '../build/ExampleOracleSimple.json'
+import { IBEP20, ExampleOracleSimple } from '../typechain'
+import { IDPexPair } from '@passive-income/dpex-swap-core/typechain'
+import ExampleOracleSimpleAbi from '../artifacts/contracts/examples/ExampleOracleSimple.sol/ExampleOracleSimple.json'
 
 chai.use(solidity)
 
@@ -18,18 +18,14 @@ const token0Amount = expandTo18Decimals(5)
 const token1Amount = expandTo18Decimals(10)
 
 describe('ExampleOracleSimple', () => {
-  const provider = new MockProvider({
-    hardfork: 'istanbul',
-    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-    gasLimit: 9999999
-  })
+  const provider = new MockProvider({ ganacheOptions: { gasLimit: 9999999, hardfork: 'istanbul' }})
   const [wallet] = provider.getWallets()
-  const loadFixture = createFixtureLoader(provider, [wallet])
+  const loadFixture = createFixtureLoader([wallet], provider)
 
-  let token0: Contract
-  let token1: Contract
-  let pair: Contract
-  let exampleOracleSimple: Contract
+  let token0: IBEP20
+  let token1: IBEP20
+  let pair: IDPexPair
+  let exampleOracleSimple: ExampleOracleSimple
 
   async function addLiquidity() {
     await token0.transfer(pair.address, token0Amount)
@@ -46,10 +42,10 @@ describe('ExampleOracleSimple', () => {
     await addLiquidity()
     exampleOracleSimple = await deployContract(
       wallet,
-      ExampleOracleSimple,
-      [fixture.factoryV2.address, token0.address, token1.address],
+      ExampleOracleSimpleAbi,
+      [fixture.factory.address, token0.address, token1.address],
       overrides
-    )
+    ) as ExampleOracleSimple
   })
 
   it('update', async () => {
