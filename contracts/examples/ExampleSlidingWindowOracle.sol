@@ -1,12 +1,14 @@
-pragma solidity =0.6.6;
+// SPDX-License-Identifier: GPL-3.0-or-later
 
-import '@uniswap/v2-core/contracts/interfaces/IPancakeFactory.sol';
-import '@uniswap/v2-core/contracts/interfaces/IPancakePair.sol';
+pragma solidity ^0.7.4;
+
+import '@passive-income/dpex-swap-core/contracts/interfaces/IDPexFactory.sol';
+import '@passive-income/dpex-swap-core/contracts/interfaces/IDPexPair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
 import '../libraries/SafeMath.sol';
-import '../libraries/PancakeLibrary.sol';
-import '../libraries/PancakeOracleLibrary.sol';
+import '../libraries/DPexLibrary.sol';
+import '../libraries/DPexOracleLibrary.sol';
 
 // sliding window oracle that uses observations collected over a window to provide moving price averages in the past
 // `windowSize` with a precision of `windowSize / granularity`
@@ -39,7 +41,7 @@ contract ExampleSlidingWindowOracle {
     // mapping from pair address to a list of price observations of that pair
     mapping(address => Observation[]) public pairObservations;
 
-    constructor(address factory_, uint windowSize_, uint8 granularity_) public {
+    constructor(address factory_, uint windowSize_, uint8 granularity_) {
         require(granularity_ > 1, 'SlidingWindowOracle: GRANULARITY');
         require(
             (periodSize = windowSize_ / granularity_) * granularity_ == windowSize_,
@@ -67,7 +69,7 @@ contract ExampleSlidingWindowOracle {
     // update the cumulative price for the observation at the current timestamp. each observation is updated at most
     // once per epoch period.
     function update(address tokenA, address tokenB) external {
-        address pair = PancakeLibrary.pairFor(factory, tokenA, tokenB);
+        address pair = DPexLibrary.pairFor(factory, tokenA, tokenB);
 
         // populate the array with empty observations (first call only)
         for (uint i = pairObservations[pair].length; i < granularity; i++) {
@@ -81,7 +83,7 @@ contract ExampleSlidingWindowOracle {
         // we only want to commit updates once per period (i.e. windowSize / granularity)
         uint timeElapsed = block.timestamp - observation.timestamp;
         if (timeElapsed > periodSize) {
-            (uint price0Cumulative, uint price1Cumulative,) = PancakeOracleLibrary.currentCumulativePrices(pair);
+            (uint price0Cumulative, uint price1Cumulative,) = DPexOracleLibrary.currentCumulativePrices(pair);
             observation.timestamp = block.timestamp;
             observation.price0Cumulative = price0Cumulative;
             observation.price1Cumulative = price1Cumulative;
@@ -105,7 +107,7 @@ contract ExampleSlidingWindowOracle {
     // range [now - [windowSize, windowSize - periodSize * 2], now]
     // update must have been called for the bucket corresponding to timestamp `now - windowSize`
     function consult(address tokenIn, uint amountIn, address tokenOut) external view returns (uint amountOut) {
-        address pair = PancakeLibrary.pairFor(factory, tokenIn, tokenOut);
+        address pair = DPexLibrary.pairFor(factory, tokenIn, tokenOut);
         Observation storage firstObservation = getFirstObservationInWindow(pair);
 
         uint timeElapsed = block.timestamp - firstObservation.timestamp;
@@ -113,8 +115,8 @@ contract ExampleSlidingWindowOracle {
         // should never happen.
         require(timeElapsed >= windowSize - periodSize * 2, 'SlidingWindowOracle: UNEXPECTED_TIME_ELAPSED');
 
-        (uint price0Cumulative, uint price1Cumulative,) = PancakeOracleLibrary.currentCumulativePrices(pair);
-        (address token0,) = PancakeLibrary.sortTokens(tokenIn, tokenOut);
+        (uint price0Cumulative, uint price1Cumulative,) = DPexOracleLibrary.currentCumulativePrices(pair);
+        (address token0,) = DPexLibrary.sortTokens(tokenIn, tokenOut);
 
         if (token0 == tokenIn) {
             return computeAmountOut(firstObservation.price0Cumulative, price0Cumulative, timeElapsed, amountIn);

@@ -1,8 +1,10 @@
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: GPL-3.0-or-later
 
-interface IPancakeRouter01 {
-    function factory() external pure returns (address);
-    function WETH() external pure returns (address);
+pragma solidity ^0.7.4;
+
+interface IDPexRouter01 {
+    function factory() external returns (address);
+    function WETH() external returns (address);
 
     function addLiquidity(
         address tokenA,

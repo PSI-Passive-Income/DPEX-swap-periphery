@@ -1,21 +1,23 @@
-pragma solidity =0.6.6;
+// SPDX-License-Identifier: GPL-3.0-or-later
 
-import '@uniswap/v2-core/contracts/interfaces/IPancakePair.sol';
+pragma solidity ^0.7.4;
+
+import '@passive-income/dpex-swap-core/contracts/interfaces/IDPexPair.sol';
+import '@passive-income/dpex-swap-core/contracts/interfaces/IBEP20.sol';
 import '@uniswap/lib/contracts/libraries/Babylonian.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
-import '../interfaces/IERC20.sol';
-import '../interfaces/IPancakeRouter01.sol';
+import '../interfaces/IDPexRouter01.sol';
 import '../libraries/SafeMath.sol';
-import '../libraries/PancakeLibrary.sol';
+import '../libraries/DPexLibrary.sol';
 
 contract ExampleSwapToPrice {
     using SafeMath for uint256;
 
-    IPancakeRouter01 public immutable router;
+    IDPexRouter01 public immutable router;
     address public immutable factory;
 
-    constructor(address factory_, IPancakeRouter01 router_) public {
+    constructor(address factory_, IDPexRouter01 router_) {
         factory = factory_;
         router = router_;
     }
@@ -62,7 +64,7 @@ contract ExampleSwapToPrice {
         bool aToB;
         uint256 amountIn;
         {
-            (uint256 reserveA, uint256 reserveB) = PancakeLibrary.getReserves(factory, tokenA, tokenB);
+            (uint256 reserveA, uint256 reserveB) = DPexLibrary.getReserves(factory, tokenA, tokenB);
             (aToB, amountIn) = computeProfitMaximizingTrade(
                 truePriceTokenA, truePriceTokenB,
                 reserveA, reserveB

@@ -4,8 +4,8 @@ import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import PancakeFactory from '@uniswap/v2-core/build/PancakeFactory.json'
-import IPancakePair from '@uniswap/v2-core/build/IPancakePair.json'
+import DPexFactory from '@uniswap/v2-core/build/DPexFactory.json'
+import IDPexPair from '@uniswap/v2-core/build/IDPexPair.json'
 
 import ERC20 from '../../build/ERC20.json'
 import WETH9 from '../../build/WETH9.json'
@@ -49,7 +49,7 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   await factoryV1.initializeFactory((await deployContract(wallet, UniswapV1Exchange, [])).address)
 
   // deploy V2
-  const factoryV2 = await deployContract(wallet, PancakeFactory, [wallet.address])
+  const factoryV2 = await deployContract(wallet, DPexFactory, [wallet.address])
 
   // deploy routers
   const router01 = await deployContract(wallet, PancakeRouter01, [factoryV2.address, WETH.address], overrides)
@@ -71,7 +71,7 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   // initialize V2
   await factoryV2.createPair(tokenA.address, tokenB.address)
   const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
-  const pair = new Contract(pairAddress, JSON.stringify(IPancakePair.abi), provider).connect(wallet)
+  const pair = new Contract(pairAddress, JSON.stringify(IDPexPair.abi), provider).connect(wallet)
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
@@ -79,7 +79,7 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
 
   await factoryV2.createPair(WETH.address, WETHPartner.address)
   const WETHPairAddress = await factoryV2.getPair(WETH.address, WETHPartner.address)
-  const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IPancakePair.abi), provider).connect(wallet)
+  const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IDPexPair.abi), provider).connect(wallet)
 
   return {
     token0,

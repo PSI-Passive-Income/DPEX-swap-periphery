@@ -1,7 +1,10 @@
-pragma solidity >=0.5.0;
+// SPDX-License-Identifier: GPL-3.0-or-later
 
-interface IWETH {
+pragma solidity ^0.7.4;
+
+import '@passive-income/dpex-swap-core/contracts/interfaces/IBEP20.sol';
+
+interface IWETH is IBEP20 {
     function deposit() external payable;
-    function transfer(address to, uint value) external returns (bool);
     function withdraw(uint) external;
 }

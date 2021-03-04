@@ -1,11 +1,13 @@
-pragma solidity =0.6.6;
+// SPDX-License-Identifier: GPL-3.0-or-later
 
-import '@uniswap/v2-core/contracts/interfaces/IPancakeFactory.sol';
-import '@uniswap/v2-core/contracts/interfaces/IPancakePair.sol';
+pragma solidity ^0.7.4;
+
+import '@passive-income/dpex-swap-core/contracts/interfaces/IDPexFactory.sol';
+import '@passive-income/dpex-swap-core/contracts/interfaces/IDPexPair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
-import '../libraries/PancakeOracleLibrary.sol';
-import '../libraries/PancakeLibrary.sol';
+import '../libraries/DPexOracleLibrary.sol';
+import '../libraries/DPexLibrary.sol';
 
 // fixed window oracle that recomputes the average price for the entire period once every period
 // note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
@@ -14,7 +16,7 @@ contract ExampleOracleSimple {
 
     uint public constant PERIOD = 24 hours;
 
-    IPancakePair immutable pair;
+    IDPexPair immutable pair;
     address public immutable token0;
     address public immutable token1;
 
@@ -24,8 +26,8 @@ contract ExampleOracleSimple {
     FixedPoint.uq112x112 public price0Average;
     FixedPoint.uq112x112 public price1Average;
 
-    constructor(address factory, address tokenA, address tokenB) public {
-        IPancakePair _pair = IPancakePair(PancakeLibrary.pairFor(factory, tokenA, tokenB));
+    constructor(address factory, address tokenA, address tokenB) {
+        IDPexPair _pair = IDPexPair(DPexLibrary.pairFor(factory, tokenA, tokenB));
         pair = _pair;
         token0 = _pair.token0();
         token1 = _pair.token1();
@@ -34,12 +36,13 @@ contract ExampleOracleSimple {
         uint112 reserve0;
         uint112 reserve1;
         (reserve0, reserve1, blockTimestampLast) = _pair.getReserves();
-        require(reserve0 != 0 && reserve1 != 0, 'ExampleOracleSimple: NO_RESERVES'); // ensure that there's liquidity in the pair
+        // ensure that there's liquidity in the pair
+        require(reserve0 != 0 && reserve1 != 0, 'ExampleOracleSimple: NO_RESERVES');
     }
 
     function update() external {
         (uint price0Cumulative, uint price1Cumulative, uint32 blockTimestamp) =
-            PancakeOracleLibrary.currentCumulativePrices(address(pair));
+            DPexOracleLibrary.currentCumulativePrices(address(pair));
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
 
         // ensure that at least one full period has passed since the last update
